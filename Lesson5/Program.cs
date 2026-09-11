@@ -351,11 +351,7 @@ namespace Lesson5
                 Console.Write("Secim: ");
 
                 var input = Console.ReadLine();
-                if (input == "0")
-                {
-                    break;
-                }
-
+                
 
                 try
                 {
