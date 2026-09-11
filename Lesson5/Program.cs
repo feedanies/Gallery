@@ -156,14 +156,14 @@ namespace Lesson5
             foreach (var c in cars)
             {
                 Console.WriteLine($"{c.Model} - {c.Year} - {c.Price} AZN");
-            }   
+            }
         }
 
         static void GroupByModel(CarRepository carRepo)
         {
             var groups = from c in carRepo.GetAll()
-                        group c by c.Model into g
-                        select g;
+                         group c by c.Model into g
+                         select g;
 
             foreach (var g in groups)
             {
@@ -173,11 +173,161 @@ namespace Lesson5
             }
         }
 
+        /////////////////////////////////////////////////////////////////
+
+        static void AddCustomer(CustomerRepository customerRepo)
+        {
+            Console.Write("Fullname: ");
+            var fullname = Console.ReadLine();
+            Console.Write("Phone: ");
+            var phone = Console.ReadLine();
+            Console.Write("Email: ");
+            var email = Console.ReadLine();
+
+            var customer = new Customer
+            {
+                Fullname = fullname,
+                Phone = phone,
+                Email = email
+            };
+            customerRepo.Add(customer);
+            customerRepo.SaveChanges();
+            Console.WriteLine("Musteri elave olundu.");
+        }
+
+        static void UpdateCustomer(CustomerRepository customerRepo)
+        {
+            Console.Write("Yenilenecek musterinin ID-si: ");
+            var id = int.Parse(Console.ReadLine());
+            var customer = customerRepo.Get(id);
+            if (customer == null)
+            {
+                Console.WriteLine("Musteri tapilmadi.");
+                return;
+            }
+
+            Console.Write($"Fullname deyisilsin? (Cari: {customer.Fullname}) [0-Xeyr / 1-Beli]: ");
+            if (Console.ReadLine() == "1")
+            {
+                Console.Write("Yeni Fullname: ");
+                customer.Fullname = Console.ReadLine();
+            }
+
+            Console.Write($"Phone deyisilsin? (Cari: {customer.Phone}) [0-Xeyr / 1-Beli]: ");
+            if (Console.ReadLine() == "1")
+            {
+                Console.Write("Yeni Phone: ");
+                customer.Phone = Console.ReadLine();
+            }
+
+            Console.Write($"Email deyisilsin? (Cari: {customer.Email}) [0-Xeyr / 1-Beli]: ");
+            if (Console.ReadLine() == "1")
+            {
+                Console.Write("Yeni Email: ");
+                customer.Email = Console.ReadLine();
+            }
+
+            customerRepo.Update(customer);
+            customerRepo.SaveChanges();
+            Console.WriteLine("Musteri yenilendi.");
+        }
+
+        static void DeleteCustomer(CustomerRepository customerRepo)
+        {
+            Console.Write("Silinecek musterinin ID-si: ");
+            var id = int.Parse(Console.ReadLine());
+            var customer = customerRepo.Get(id);
+            if (customer == null)
+            {
+                Console.WriteLine("Musteri tapilmadi.");
+                return;
+            }
+
+            customerRepo.Delete(customer);
+            customerRepo.SaveChanges();
+            Console.WriteLine("Musteri silindi.");
+        }
+
+        static void ReadAllCustomers(CustomerRepository customerRepo)
+        {
+            foreach (var c in customerRepo.GetAll())
+            {
+                Console.WriteLine($"Id: {c.Id}, Fullname: {c.Fullname}, Phone: {c.Phone}, Email: {c.Email}");
+                Console.WriteLine("------------------------------------");
+            }
+        }
+
+
+        //////////////////////////////////////////////////////////////////
+
+        static void AddSale(SaleRepository saleRepo, CarRepository carRepo, CustomerRepository customerRepo)
+        {
+            Console.Write("Avtomobilin ID-si: ");
+            var carId = int.Parse(Console.ReadLine());
+            var car = carRepo.Get(carId);
+            if (car == null)
+            {
+                Console.WriteLine("Bele Id-de avtomobil tapilmadi.");
+                return;
+            }
+
+            Console.Write("Musterinin ID-si: ");
+            var customerId = int.Parse(Console.ReadLine());
+            var customer = customerRepo.Get(customerId);
+            if (customer == null)
+            {
+                Console.WriteLine("Musteri tapilmadi.");
+                return;
+            }
+
+            Console.Write("Satis qiymeti: ");
+            var salePrice = decimal.Parse(Console.ReadLine());
+
+            var sale = new Sale
+            {
+                CarId = carId,
+                CustomerId = customerId,
+                SaleDate = DateTime.Now,
+                SalePrice = salePrice
+            };
+            saleRepo.Add(sale);
+            saleRepo.SaveChanges();
+            Console.WriteLine("Satis qeyde alindi.");
+        }
+
+        static void DeleteSale(SaleRepository saleRepo)
+        {
+            Console.Write("Silinecek satisin ID-si: ");
+            var id = int.Parse(Console.ReadLine());
+            var sale = saleRepo.Get(id);
+            if (sale == null)
+            {
+                Console.WriteLine("Satis tapilmadi.");
+                return;
+            }
+
+            saleRepo.Delete(sale);
+            saleRepo.SaveChanges();
+            Console.WriteLine("Satis silindi.");
+        }
+
+        static void ReadAllSales(SaleRepository saleRepo)
+        {
+            foreach (var s in saleRepo.GetAll())
+            {
+                Console.WriteLine($"Id: {s.Id}, CarId: {s.CarId}, CustomerId: {s.CustomerId}, Tarix: {s.SaleDate}, Qiymet: {s.SalePrice} AZN");
+                Console.WriteLine("------------------------------------");
+            }
+        }
+
+
 
         static void Main(string[] args)
         {
             var context = new GalleryContext();
             var carRepo = new CarRepository(context);
+            var customerRepo = new CustomerRepository(context);
+            var saleRepo = new SaleRepository(context);
 
             while (true)
             {
@@ -190,6 +340,13 @@ namespace Lesson5
                 Console.WriteLine("6. Marka/modele göre axtaris");
                 Console.WriteLine("7. Yalniz yeni avtomobiller");
                 Console.WriteLine("8. Marka uzre qruplasdirma");
+                Console.WriteLine("9. Yeni musteri elave et");
+                Console.WriteLine("10. Musterini yenile");
+                Console.WriteLine("11. Musterini sil");
+                Console.WriteLine("12. Butun musterilere bax");
+                Console.WriteLine("13. Yeni satis qeyde al");
+                Console.WriteLine("14. Satisi sil");
+                Console.WriteLine("15. Butun satislara bax");
                 Console.WriteLine("0. Cixis");
                 Console.Write("Secim: ");
 
@@ -199,38 +356,68 @@ namespace Lesson5
                     break;
                 }
 
-                switch (input)
+
+                try
                 {
-                    case "1":
-                        AddCar(carRepo);
-                        break;
-                    case "2":
-                        UpdateCar(carRepo);
-                        break;
-                    case "3":
-                        DeleteCar(carRepo);
-                        break;
-                    case "4":
-                        ReadAllCars(carRepo);
-                        break;
-                    case "5":
-                        FilterByPrice(carRepo);
-                        break;
-                    case "6":
-                        SearchByModel(carRepo);
-                        break;
-                    case "7":
-                        ShowNewCars(carRepo);
-                        break;
-                    case "8":
-                        GroupByModel(carRepo);
-                        break;
-                    case "0":
-                        return;
-                    default:
-                        Console.Write("Yanlis secim: Zehmet olmasa yeniden secim edin: ");
-                        break;
+                    switch (input)
+                    {
+                        case "1":
+                            AddCar(carRepo);
+                            break;
+                        case "2":
+                            UpdateCar(carRepo);
+                            break;
+                        case "3":
+                            DeleteCar(carRepo);
+                            break;
+                        case "4":
+                            ReadAllCars(carRepo);
+                            break;
+                        case "5":
+                            FilterByPrice(carRepo);
+                            break;
+                        case "6":
+                            SearchByModel(carRepo);
+                            break;
+                        case "7":
+                            ShowNewCars(carRepo);
+                            break;
+                        case "8":
+                            GroupByModel(carRepo);
+                            break;
+                        case "9":
+                            AddCustomer(customerRepo);
+                            break;
+                        case "10":
+                            UpdateCustomer(customerRepo);
+                            break;
+                        case "11":
+                            DeleteCustomer(customerRepo);
+                            break;
+                        case "12":
+                            ReadAllCustomers(customerRepo);
+                            break;
+                        case "13":
+                            AddSale(saleRepo, carRepo, customerRepo);
+                            break;
+                        case "14":
+                            DeleteSale(saleRepo);
+                            break;
+                        case "15":
+                            ReadAllSales(saleRepo);
+                            break;
+                        case "0":
+                            return;
+                        default:
+                            Console.Write("Yanlis secim: Zehmet olmasa yeniden secim edin: ");
+                            break;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Xeta bas verdi: " + ex.Message);
+                }
+                
             }
 
 
